@@ -22,6 +22,13 @@ router.get('/users', async (req, res) => {
   }
 })
 
-new User({name: "Jess"})
+router.post('/signin', async (req, res) => {
+  try {
+    debugger
+  } catch (e) {
+    res.status(500).send()
+  }
+})
+
 
 module.exports = router
