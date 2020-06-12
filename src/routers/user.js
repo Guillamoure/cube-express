@@ -23,8 +23,16 @@ router.get('/users', async (req, res) => {
 })
 
 router.post('/signin', async (req, res) => {
+  const data = req.body
   try {
-    debugger
+    let user = await User.findOne(data)
+    if (!user){
+      user = await new User(data)
+      user.save()
+      res.status(201).send(user)
+    } else {
+      res.status(302).send(user)
+    }
   } catch (e) {
     res.status(500).send()
   }
