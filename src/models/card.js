@@ -6,6 +6,14 @@ const cardSchema = new mongoose.Schema({
     type: String,
     required: true,
     trim: true
+  },
+  manaCost: {
+    type: String,
+    trim: true
+  },
+  cmc: {
+    type: Number,
+    trim: true
   }
 })
 
