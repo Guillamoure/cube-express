@@ -16,6 +16,8 @@
     "mongodb": "^3.5.8",
     "mongoose": "^5.9.18",
     "node-fetch": "^2.6.0",
+    "socket.io": "^2.3.0",
+    "socketio": "^1.0.0",
     "validator": "^13.0.0"
   }
 }

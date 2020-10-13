@@ -23,7 +23,7 @@ router.get('/cards', async (req, res) => {
   }
 })
 
-routers.post('/cards', async (req, res) => {
+router.post('/cards', async (req, res) => {
   console.log("hit")
 })
 
