@@ -41,6 +41,7 @@ io.on('connection', (socket) => {
 		if (playersMissingPlayers.length === 0){
 			// if there is no room_id, create on
 			client.gameData.roomID = uuidv4()
+			console.log(client.gameData.roomID)
 			client.gameData.players.push({user: client.user, userID: client.userID})
 
 			socket.emit('joinRoom', {players: client.gameData.players, roomID: client.gameData.roomID, numOfPlayers: client.gameData.numOfPlayers})
@@ -49,6 +50,7 @@ io.on('connection', (socket) => {
 			let chosenPlayer = playersMissingPlayers[0]
 			// otherwise, add room_id
 			client.gameData.roomID = chosenPlayer.gameData.roomID
+			console.log(client.gameData.roomID)
 			// update all players with player data
 			chosenPlayer.gameData.players.push({user: client.user, userID: client.userID})
 			chosenPlayer.socket.emit('joinRoom', {players: chosenPlayer.gameData.players, roomID: chosenPlayer.gameData.roomID, numOfPlayers: chosenPlayer.gameData.numOfPlayers})
@@ -65,6 +67,29 @@ io.on('connection', (socket) => {
 				}
 			})
 		}
+	})
+	socket.on('leaveRoom', (data) => {
+		let clientIndex = clients.findIndex(cl => cl.userID === data.userID)
+    let client = clients[clientIndex]
+    console.log("before leaving", clients)
+    // remove self from rooms
+    clients.forEach((cl, i) => {
+      if (cl.gameData.roomID === client.gameData.roomID && i !== clientIndex){
+        let newPlayers = [...cl.gameData.players].filter(p => p.userID !== client.userID)
+        cl.gameData.players = newPlayers
+
+        // send a message to all members of the room
+        cl.socket.emit('joinRoom', {players: newPlayers, roomID: cl.gameData.roomID, numOfPlayers: cl.gameData.numOfPlayers})
+      }
+    })
+    clients.splice(clientIndex, 1)
+    // remove client from list once disconnected
+		console.log("after leaving", clients)
+
+	})
+
+	socket.on('disconnected', () => {
+		debugger
 	})
 })
 
