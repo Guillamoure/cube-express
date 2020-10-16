@@ -8,7 +8,7 @@ router.get('/cards', async (req, res) => {
   console.log("YOOOOO")
   try {
     const dbCards = await Card.find({})
-    fetch(`${url}?name=heliod`)
+    fetch(`${url}?name=nyx`)
     .then(r => {
       console.log("grabbed them! converting....")
       return r.json()
@@ -24,6 +24,16 @@ router.get('/cards', async (req, res) => {
 })
 
 router.post('/cards', async (req, res) => {
+
+	const card = new Card(req.body)
+	card.cardType = req.body.type
+
+	card.save().then(() => {
+		res.send(card)
+	}).catch(e => {
+		debugger
+	})
+
   console.log("hit")
 })
 
