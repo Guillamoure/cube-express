@@ -25,27 +25,45 @@ router.get('/cards', async (req, res) => {
 				query += query.length > 0 ? "&" : "?"
 				query += `${q}=${req.query[q]}`
 			})
-			fetch(`${url}${query}`)
-			.then(r => {
-				console.log("grabbed them! converting....")
-				return r.json()
-			})
-			.then(async data => {
-				console.log("found them!")
+			let totalSearch = false
+			let page = 1
+			let apiCards = []
+			while (!totalSearch){
+				let pageQuery = query.length > 0 ? "&" : "?"
+				pageQuery += `page=${page}`
+				console.log("fetch to", `${url}${query}${pageQuery}`)
 
-				let uniqueCardNames = []
-				let uniqueAndValidCards = data.cards.filter((el, i, array) => {
-					if (el.multiverseid){
-						if (!uniqueCardNames.includes(el.name)){
-							uniqueCardNames.push(el.name)
-							return true
-						} else {
-							return false
-						}
+				const response = await fetch(`${url}${query}${pageQuery}`)
+				const json = await response.json()
+
+				apiCards = [...apiCards, ...json.cards]
+				if (json.cards.length < 100){
+					totalSearch = true
+				}
+				page++
+			}
+			// fetch(`${url}${query}`)
+			// .then(r => {
+			// 	console.log("grabbed them! converting....")
+			// 	return r.json()
+			// })
+			console.log("found them!")
+
+			let uniqueCardNames = []
+			let basicLandNames = ["Forest", "Mountain", "Island", "Swamp", 'Plains']
+			let uniqueAndValidCards = apiCards.filter((el, i, array) => {
+				if (el.multiverseid){
+					if (!uniqueCardNames.includes(el.name) || basicLandNames.includes(el.name)){
+						uniqueCardNames.push(el.name)
+						return true
 					} else {
 						return false
 					}
-				})
+				} else {
+					return false
+				}
+			})
+			console.log("unique cards created, except for basic lands")
 				// console.log(uniqueAndValidCards)
 				let cards = uniqueAndValidCards.map(c => {
 					const card = new Card(c)
@@ -60,7 +78,11 @@ router.get('/cards', async (req, res) => {
 
 				let saveCards = await uniqueAndValidCards.map(async c => {
 					let dbCard = {foo: "bar"}
-					Card.findOne({name: c.name, manaCost: c.manaCost}, async (err, existingCard) => {
+					let searchCriteria = {name: c.name, manaCost: c.manaCost}
+					if (basicLandNames.includes(c.name)){
+						searchCriteria = {multiverseid: c.multiverseid}
+					}
+					Card.findOne(searchCriteria, async (err, existingCard) => {
 						if (existingCard){
 							console.log(`${c.name} is already in the database`)
 							dbCard = existingCard
@@ -101,7 +123,6 @@ router.get('/cards', async (req, res) => {
 				//
 				// res.send(cards)
 
-			})
 		}
   } catch (e){
     res.status(500).send(e)
