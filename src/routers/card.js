@@ -7,20 +7,25 @@ let url = "https://api.magicthegathering.io/v1/cards"
 router.get('/cards', async (req, res) => {
   console.log("YOOOOO")
   try {
-		if (!req.query.name){
+		if (!Object.keys(req.query).length){
 			const dbCards = await Card.find({})
 			res.send(dbCards)
 			return
 		}
 
-    const dbCards = await Card.find({name: {$regex: req.query.name, $options: "i"}})
+    const dbCards = await Card.find({name: {$regex: req.query.name || "", $options: "i"}, set: {$regex: req.query.set || "", $options: "i"}})
 		// const dbCards = []
 		if (dbCards.length){
 			console.log(`Found ${dbCards.length} card, including ${dbCards[0].name}!`)
 			res.send(dbCards)
 		} else {
-			console.log(`Searching API for ${req.query.name}...`)
-			fetch(`${url}?name=${req.query.name}`)
+			console.log(`Searching API for ${req.query.name || req.query.set}...`)
+			let query = ""
+			Object.keys(req.query).forEach(q => {
+				query += query.length > 0 ? "&" : "?"
+				query += `${q}=${req.query[q]}`
+			})
+			fetch(`${url}${query}`)
 			.then(r => {
 				console.log("grabbed them! converting....")
 				return r.json()
@@ -69,7 +74,6 @@ router.get('/cards', async (req, res) => {
 							await card.save()
 						}
 					})
-					console.log(dbCard)
 					return dbCard
 
 				})
