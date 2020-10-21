@@ -63,6 +63,9 @@ const cardSchema = new mongoose.Schema({
 	imageUrl: {
 		type: String
 	},
+	largeImageUrl: {
+		type: String
+	},
 	power: {
 		type: String
 	},

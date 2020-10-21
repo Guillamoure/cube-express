@@ -3,6 +3,7 @@ const fetch = require("node-fetch")
 const Card = require('../models/card')
 const router = new express.Router()
 let url = "https://api.magicthegathering.io/v1/cards"
+let scryfallCardsMultiverse = "https://api.scryfall.com/cards/multiverse"
 
 router.get('/cards', async (req, res) => {
   console.log("YOOOOO")
@@ -89,7 +90,10 @@ router.get('/cards', async (req, res) => {
 						} else {
 							const card = new Card(c)
 							card.cardType = c.type
-
+							let scryfallResponse = await fetch(`${scryfallCardsMultiverse}/${card.multiverseid}`)
+							let scryfallJson = await scryfallResponse.json()
+							card.largeImageUrl = scryfallJson.image_uris.large
+							
 							console.log("Creating", card.name)
 
 							dbCard = card
