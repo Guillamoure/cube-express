@@ -51,10 +51,17 @@ router.get('/cards', async (req, res) => {
 			console.log("found them!")
 
 			let uniqueCardNames = []
+			let uniqueMultiverseId = []
 			let basicLandNames = ["Forest", "Mountain", "Island", "Swamp", 'Plains']
 			let uniqueAndValidCards = apiCards.filter((el, i, array) => {
 				if (el.multiverseid){
 					if (!uniqueCardNames.includes(el.name) || basicLandNames.includes(el.name)){
+						if (el.names && el.names.length > 1){
+							if (!uniqueMultiverseId.includes(el.multiverseid)){
+								uniqueMultiverseId.push(el.multiverseid)
+								return true
+							} else {return false}
+						}
 						uniqueCardNames.push(el.name)
 						return true
 					} else {
@@ -68,6 +75,7 @@ router.get('/cards', async (req, res) => {
 				// console.log(uniqueAndValidCards)
 				let cards = uniqueAndValidCards.map(c => {
 					const card = new Card(c)
+					if (c.names && c.names.length > 1){card.name = c.names.join(" ")}
 					card.cardType = c.type
 					return card
 				})
@@ -80,7 +88,7 @@ router.get('/cards', async (req, res) => {
 				let saveCards = await uniqueAndValidCards.map(async c => {
 					let dbCard = {foo: "bar"}
 					let searchCriteria = {name: c.name, manaCost: c.manaCost}
-					if (basicLandNames.includes(c.name)){
+					if (basicLandNames.includes(c.name) || c.layout === "split"){
 						searchCriteria = {multiverseid: c.multiverseid}
 					}
 					Card.findOne(searchCriteria, async (err, existingCard) => {
@@ -89,11 +97,12 @@ router.get('/cards', async (req, res) => {
 							dbCard = existingCard
 						} else {
 							const card = new Card(c)
+							if (c.names && c.names.length > 1){card.name = c.names.join(" ")}
 							card.cardType = c.type
 							let scryfallResponse = await fetch(`${scryfallCardsMultiverse}/${card.multiverseid}`)
 							let scryfallJson = await scryfallResponse.json()
 							card.largeImageUrl = scryfallJson.image_uris.large
-							
+
 							console.log("Creating", card.name)
 
 							dbCard = card
@@ -129,6 +138,7 @@ router.get('/cards', async (req, res) => {
 
 		}
   } catch (e){
+		console.log(e)
     res.status(500).send(e)
   }
 })
